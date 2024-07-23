@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using HoneyRaesAPI.Models;
+﻿using HoneyRaesAPI.Models;
+using System.Collections.Generic;
 using System;
 
 List<Customer> customers = new List<Customer>
@@ -47,7 +47,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
         EmployeeId = 1,
         Description = "My screen in my car will not turn on when my car starts",
         Emergency = false,
-        DateCompleted = new DateTime(2, 2, 2024);
+        DateCompleted = new DateTime(2024, 2, 4),
     },
     new ServiceTicket()
     {
@@ -55,7 +55,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
         CustomerId = 4,
         Description = "My windsheild is shattered. The glass is all over in the car and is undrivable currently",
         Emergency = true,
-        DateCompleted = new DateTime(8, 12, 2023);
+        DateCompleted = new DateTime(2024, 12, 20),
     },
     new ServiceTicket()
     {
@@ -72,18 +72,19 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
         EmployeeId = 3,
         Description = "I got into a car crash and my car is dented all over - I need some body work done on it.",
         Emergency = false,
-        DateCompleted = new DateTime(1, 15, 2024);
+        DateCompleted = new DateTime(2024, 1, 15),
     },
     new ServiceTicket()
     {
-        Id = 5,
+        Id = 25,
         CustomerId = 4,
         EmployeeId = 1,
         Description = "I think something is wrong with my spark plugs",
         Emergency = true,
-        DateCompleted = new DateTime(7, 7, 2024);
-    }
+        DateCompleted = new DateTime(2024, 7, 13),
+    },
 };
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -103,29 +104,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapGet("/servicetickets", () =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    return serviceTickets;
+});
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/servicetickets/{id}", (int id) =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
-
-app.MapGet("/hello", () =>
-{
-    return "hello";
+    return serviceTickets.FirstOrDefault(st => st.Id == id);
 });
 
 app.Run();
