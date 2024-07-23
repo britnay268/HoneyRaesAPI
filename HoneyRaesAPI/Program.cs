@@ -104,14 +104,40 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Get all service tickets endpoint
 app.MapGet("/servicetickets", () =>
 {
     return serviceTickets;
 });
 
+// Get service tickets by Id endpoint
 app.MapGet("/servicetickets/{id}", (int id) =>
 {
     return serviceTickets.FirstOrDefault(st => st.Id == id);
+});
+
+// Get all employees endpoint
+app.MapGet("/employees", () =>
+{
+    return employees;
+});
+
+// Get all employees by id endpoint
+app.MapGet("/employees/{id}", (int id) =>
+{
+    return employees.FirstOrDefault(e => e.Id == id);
+});
+
+// Get all customers endpoint
+app.MapGet("/customers", () =>
+{
+    return customers;
+});
+
+// Get all customers by Id endpoint
+app.MapGet("/customers/{id}", (int id) =>
+{
+    return customers.FirstOrDefault(c => c.Id == id);
 });
 
 app.Run();
