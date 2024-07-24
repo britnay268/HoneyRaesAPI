@@ -149,6 +149,7 @@ app.MapGet("/customers/{id}", (int id) =>
     return customer == null ? Results.NotFound() : Results.Ok(customer);
 });
 
+// Get all open service tickets
 app.MapGet("/servicetickets/open", () =>
 {
     List<ServiceTicket> serviceTicket = serviceTickets
@@ -159,9 +160,17 @@ app.MapGet("/servicetickets/open", () =>
         return st;
         }).ToList();
  
-    return serviceTicket;
+    return serviceTicket is null ? Results.NotFound() : Results.Ok(serviceTicket);
 });
 
+// Create a service ticket
+app.MapPost("/servicetickets", (ServiceTicket serviceTicket) =>
+{
+    // creates a new id (When we get to it later, our SQL database will do this for us like JSON Server did!)
+    serviceTicket.Id = serviceTickets.Max(st => st.Id) + 1;
+    serviceTickets.Add(serviceTicket);
+    return serviceTicket;
+});
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
