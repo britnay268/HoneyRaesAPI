@@ -145,7 +145,21 @@ app.MapGet("/customers", () =>
 app.MapGet("/customers/{id}", (int id) =>
 {
     Customer? customer = customers.FirstOrDefault(c => c.Id == id);
+    customer.ServiceTickets = serviceTickets.Where(st => st.CustomerId == id).ToList();
     return customer == null ? Results.NotFound() : Results.Ok(customer);
+});
+
+app.MapGet("/servicetickets/open", () =>
+{
+    List<ServiceTicket> serviceTicket = serviceTickets
+    .Where(st => st.EmployeeId is null)
+    .Select(st => {
+        st.Employee = employees.FirstOrDefault(e => e.Id == st.EmployeeId);
+        st.Customer = customers.FirstOrDefault(c => c.Id == st.CustomerId);
+        return st;
+        }).ToList();
+ 
+    return serviceTicket;
 });
 
 app.Run();
