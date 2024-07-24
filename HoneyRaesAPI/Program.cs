@@ -104,14 +104,62 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Get all service tickets endpoint
 app.MapGet("/servicetickets", () =>
 {
     return serviceTickets;
 });
 
+// Get service tickets by Id endpoint
 app.MapGet("/servicetickets/{id}", (int id) =>
 {
-    return serviceTickets.FirstOrDefault(st => st.Id == id);
+    ServiceTicket? serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
+    serviceTicket.Employee = employees.FirstOrDefault(e => e.Id == serviceTicket.EmployeeId);
+    serviceTicket.Customer = customers.FirstOrDefault(e => e.Id == serviceTicket.CustomerId);
+    return serviceTicket == null ? Results.NotFound() : Results.Ok(serviceTicket);
+});
+
+// Get all employees endpoint
+app.MapGet("/employees", () =>
+{
+    return employees;
+});
+
+// Get all employees by id endpoint
+app.MapGet("/employees/{id}", (int id) =>
+{
+    // Gets employee by Id
+    Employee? employee = employees.FirstOrDefault(e => e.Id == id);
+    // Gets serviceTickets where the serviceTickets employeeId matches employee's Id
+    employee.ServiceTickets = serviceTickets.Where(st => st.EmployeeId == id).ToList();
+    return employee == null ? Results.NotFound() : Results.Ok(employee);
+});
+
+// Get all customers endpoint
+app.MapGet("/customers", () =>
+{
+    return customers;
+});
+
+// Get all customers by Id endpoint
+app.MapGet("/customers/{id}", (int id) =>
+{
+    Customer? customer = customers.FirstOrDefault(c => c.Id == id);
+    customer.ServiceTickets = serviceTickets.Where(st => st.CustomerId == id).ToList();
+    return customer == null ? Results.NotFound() : Results.Ok(customer);
+});
+
+app.MapGet("/servicetickets/open", () =>
+{
+    List<ServiceTicket> serviceTicket = serviceTickets
+    .Where(st => st.EmployeeId is null)
+    .Select(st => {
+        st.Employee = employees.FirstOrDefault(e => e.Id == st.EmployeeId);
+        st.Customer = customers.FirstOrDefault(c => c.Id == st.CustomerId);
+        return st;
+        }).ToList();
+ 
+    return serviceTicket;
 });
 
 app.Run();
