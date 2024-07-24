@@ -160,7 +160,7 @@ app.MapGet("/servicetickets/open", () =>
         return st;
         }).ToList();
  
-    return serviceTicket;
+    return serviceTicket is null ? Results.NotFound() : Results.Ok(serviceTicket);
 });
 
 // Create a service ticket
