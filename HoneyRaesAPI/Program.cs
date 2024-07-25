@@ -83,6 +83,28 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
         Emergency = true,
         DateCompleted = new DateTime(2024, 7, 13),
     },
+    new ServiceTicket()
+    {
+        Id = 6,
+        CustomerId = 4,
+        Description = "There is a leak in the roof of my car",
+        Emergency = true,
+    },
+    new ServiceTicket()
+    {
+        Id = 7,
+        CustomerId = 6,
+        Description = "My tesla stairing loses controller and swerves constantly when driving it",
+        Emergency = true,
+    },
+    new ServiceTicket()
+    {
+        Id = 8,
+        CustomerId = 6,
+        EmployeeId = 1,
+        Description = "Car break lights are not working and I don't want to get pulled over for it",
+        Emergency = true,
+    },
 };
 
 
@@ -105,17 +127,26 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // Get all service tickets endpoint
-app.MapGet("/servicetickets", () =>
+
+List<ServiceTicket> EmployeAndCustomerRecord (List<ServiceTicket> Tickets)
 {
-    foreach (ServiceTicket serviceTicket in serviceTickets)
+    foreach (ServiceTicket serviceTicket in Tickets)
     {
         serviceTicket.Employee = employees.FirstOrDefault(e => e.Id == serviceTicket.EmployeeId);
         serviceTicket.Customer = customers.FirstOrDefault(e => e.Id == serviceTicket.CustomerId);
     }
+
+    return Tickets;
+};
+
+app.MapGet("/servicetickets", () =>
+{
+    EmployeAndCustomerRecord(serviceTickets);
+
     return serviceTickets;
 });
 
-// Get service tickets by Id endpoint
+// This is done to get service tickets by Id endpoint
 app.MapGet("/servicetickets/{id}", (int id) =>
 {
     ServiceTicket? serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
@@ -124,13 +155,13 @@ app.MapGet("/servicetickets/{id}", (int id) =>
     return serviceTicket == null ? Results.NotFound() : Results.Ok(serviceTicket);
 });
 
-// Get all employees endpoint
+// This is done to get all employees endpoint
 app.MapGet("/employees", () =>
 {
     return employees;
 });
 
-// Get all employees by id endpoint
+// This is done to get all employees by id endpoint
 app.MapGet("/employees/{id}", (int id) =>
 {
     // Gets employee by Id
@@ -146,7 +177,7 @@ app.MapGet("/customers", () =>
     return customers;
 });
 
-// Get all customers by Id endpoint
+// This is done to get all customers by Id endpoint
 app.MapGet("/customers/{id}", (int id) =>
 {
     Customer? customer = customers.FirstOrDefault(c => c.Id == id);
@@ -154,7 +185,7 @@ app.MapGet("/customers/{id}", (int id) =>
     return customer == null ? Results.NotFound() : Results.Ok(customer);
 });
 
-// Get all open service tickets
+// This done to get all open service tickets
 app.MapGet("/servicetickets/open", () =>
 {
     List<ServiceTicket> serviceTicket = serviceTickets
@@ -168,7 +199,7 @@ app.MapGet("/servicetickets/open", () =>
     return serviceTicket is null ? Results.NotFound() : Results.Ok(serviceTicket);
 });
 
-// Create a service ticket
+// This is done to create a service ticket
 app.MapPost("/servicetickets", (ServiceTicket serviceTicket) =>
 {
     // creates a new id (When we get to it later, our SQL database will do this for us like JSON Server did!)
@@ -177,6 +208,7 @@ app.MapPost("/servicetickets", (ServiceTicket serviceTicket) =>
     return serviceTicket;
 });
 
+// This is done to remove an existing service ticket
 app.MapDelete("servicetickets/{id}", (int id) =>
 {
     ServiceTicket? serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
@@ -184,6 +216,7 @@ app.MapDelete("servicetickets/{id}", (int id) =>
     serviceTickets.RemoveAt(index);
 });
 
+//This is done to add new data to an existing service ticket
 app.MapPut("/servicetickets/{id}", (int id, ServiceTicket serviceTicket) =>
 {
     ServiceTicket ticketToUpdate = serviceTickets.FirstOrDefault(st => st.Id == id);
@@ -197,11 +230,20 @@ app.MapPut("/servicetickets/{id}", (int id, ServiceTicket serviceTicket) =>
     return Results.Ok();
 });
 
-// This updates one entry or key in the servicticket object that is tores in ticketToComplete
+// This is done to update one entry or key in the servicticket object that is tores in ticketToComplete
 app.MapPost("/servicetickets/{id}/complete", (int id) =>
 {
     ServiceTicket ticketToComplete = serviceTickets.FirstOrDefault(st => st.Id == id);
     ticketToComplete.DateCompleted = DateTime.Today;
+});
+
+app.MapGet("/servicetickets/emergencies", () =>
+{
+    List<ServiceTicket> urgentTickets = serviceTickets.Where(st => st.DateCompleted is null && st.Emergency is true).ToList();
+
+    EmployeAndCustomerRecord(urgentTickets);
+
+    return urgentTickets;
 });
 
 app.Run();
