@@ -184,10 +184,26 @@ app.MapDelete("servicetickets/{id}", (int id) =>
     serviceTickets.RemoveAt(index);
 });
 
+app.MapPut("/servicetickets/{id}", (int id, ServiceTicket serviceTicket) =>
+{
+    ServiceTicket ticketToUpdate = serviceTickets.FirstOrDefault(st => st.Id == id);
+    int ticketIndex = serviceTickets.IndexOf(ticketToUpdate);
+    if (ticketToUpdate == null || id != serviceTicket.Id)
+    {
+        return id != serviceTicket.Id ? Results.BadRequest() : Results.NotFound();
+    }
+
+    serviceTickets[ticketIndex] = serviceTicket;
+    return Results.Ok();
+});
+
+// This updates one entry or key in the servicticket object that is tores in ticketToComplete
+app.MapPost("/servicetickets/{id}/complete", (int id) =>
+{
+    ServiceTicket ticketToComplete = serviceTickets.FirstOrDefault(st => st.Id == id);
+    ticketToComplete.DateCompleted = DateTime.Today;
+});
+
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
 
