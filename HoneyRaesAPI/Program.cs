@@ -47,7 +47,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
         EmployeeId = 1,
         Description = "My screen in my car will not turn on when my car starts",
         Emergency = false,
-        DateCompleted = new DateTime(2024, 2, 4),
+        DateCompleted = new DateTime(2023, 2, 4),
     },
     new ServiceTicket()
     {
@@ -72,7 +72,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
         EmployeeId = 3,
         Description = "I got into a car crash and my car is dented all over - I need some body work done on it.",
         Emergency = false,
-        DateCompleted = new DateTime(2024, 1, 15),
+        DateCompleted = new DateTime(2023, 1, 15),
     },
     new ServiceTicket()
     {
@@ -81,7 +81,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
         EmployeeId = 1,
         Description = "I think something is wrong with my spark plugs",
         Emergency = true,
-        DateCompleted = new DateTime(2024, 7, 13),
+        DateCompleted = new DateTime(2023, 7, 13),
     },
     new ServiceTicket()
     {
@@ -174,6 +174,10 @@ app.MapGet("/employees/{id}", (int id) =>
 // Get all customers endpoint
 app.MapGet("/customers", () =>
 {
+    foreach (Customer customer in customers)
+    {
+        customer.ServiceTickets = serviceTickets.Where(st => st.CustomerId == customer.Id).ToList();
+    }
     return customers;
 });
 
@@ -253,6 +257,25 @@ app.MapGet("/servicetickets/unassigned", () =>
     EmployeAndCustomerRecord(unassignedTickets);
 
     return unassignedTickets;
+});
+
+app.MapGet("/customers/inactive", () =>
+{
+    DateTime now = DateTime.Now;
+
+    DateTime oneYearAgo = now - TimeSpan.FromDays(365);
+
+    List<Customer> inactiveCustomers = new List<Customer>();
+
+    foreach (Customer customer in customers)
+    {
+        customer.ServiceTickets = serviceTickets.Where(st => st.CustomerId == customer.Id).ToList();
+    }
+
+    // I used Where to filter through all the service tickets in the customers collection once the condition is met or is true to get the customers that had not have a ticket closed since a year ago
+    inactiveCustomers = customers.Where(c => c.ServiceTickets != null && c.ServiceTickets.Any(st => st.DateCompleted != null && st.DateCompleted < oneYearAgo)).ToList();
+
+    return inactiveCustomers;
 });
 
 app.Run();
