@@ -246,6 +246,15 @@ app.MapGet("/servicetickets/emergencies", () =>
     return urgentTickets;
 });
 
+app.MapGet("/servicetickets/unassigned", () =>
+{
+    List<ServiceTicket> unassignedTickets = serviceTickets.Where(st => st.EmployeeId is null && st.Employee is null).ToList();
+
+    EmployeAndCustomerRecord(unassignedTickets);
+
+    return unassignedTickets;
+});
+
 app.Run();
 
 
