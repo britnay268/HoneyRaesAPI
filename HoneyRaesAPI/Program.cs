@@ -42,7 +42,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
 {
     new ServiceTicket()
     {
-        Id = 5,
+        Id = 1,
         CustomerId = 2,
         EmployeeId = 1,
         Description = "My screen in my car will not turn on when my car starts",
@@ -51,7 +51,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
     },
     new ServiceTicket()
     {
-        Id = 10,
+        Id = 2,
         CustomerId = 4,
         Description = "My windsheild is shattered. The glass is all over in the car and is undrivable currently",
         Emergency = true,
@@ -59,7 +59,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
     },
     new ServiceTicket()
     {
-        Id = 15,
+        Id = 3,
         CustomerId = 6,
         EmployeeId = 1,
         Description = "My tesla cameras are glitching while I am driving and I would like them to work",
@@ -67,7 +67,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
     },
     new ServiceTicket()
     {
-        Id = 20,
+        Id = 4,
         CustomerId = 2,
         EmployeeId = 3,
         Description = "I got into a car crash and my car is dented all over - I need some body work done on it.",
@@ -76,7 +76,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
     },
     new ServiceTicket()
     {
-        Id = 25,
+        Id = 5,
         CustomerId = 4,
         EmployeeId = 1,
         Description = "I think something is wrong with my spark plugs",
@@ -107,6 +107,11 @@ app.UseHttpsRedirection();
 // Get all service tickets endpoint
 app.MapGet("/servicetickets", () =>
 {
+    foreach (ServiceTicket serviceTicket in serviceTickets)
+    {
+        serviceTicket.Employee = employees.FirstOrDefault(e => e.Id == serviceTicket.EmployeeId);
+        serviceTicket.Customer = customers.FirstOrDefault(e => e.Id == serviceTicket.CustomerId);
+    }
     return serviceTickets;
 });
 
@@ -171,10 +176,34 @@ app.MapPost("/servicetickets", (ServiceTicket serviceTicket) =>
     serviceTickets.Add(serviceTicket);
     return serviceTicket;
 });
+
+app.MapDelete("servicetickets/{id}", (int id) =>
+{
+    ServiceTicket? serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
+    int index = serviceTickets.IndexOf(serviceTicket);
+    serviceTickets.RemoveAt(index);
+});
+
+app.MapPut("/servicetickets/{id}", (int id, ServiceTicket serviceTicket) =>
+{
+    ServiceTicket ticketToUpdate = serviceTickets.FirstOrDefault(st => st.Id == id);
+    int ticketIndex = serviceTickets.IndexOf(ticketToUpdate);
+    if (ticketToUpdate == null || id != serviceTicket.Id)
+    {
+        return id != serviceTicket.Id ? Results.BadRequest() : Results.NotFound();
+    }
+
+    serviceTickets[ticketIndex] = serviceTicket;
+    return Results.Ok();
+});
+
+// This updates one entry or key in the servicticket object that is tores in ticketToComplete
+app.MapPost("/servicetickets/{id}/complete", (int id) =>
+{
+    ServiceTicket ticketToComplete = serviceTickets.FirstOrDefault(st => st.Id == id);
+    ticketToComplete.DateCompleted = DateTime.Today;
+});
+
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
 
