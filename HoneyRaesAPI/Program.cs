@@ -121,6 +121,20 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
         Emergency = true,
         DateCompleted = new DateTime(2024, 6, 13),
     },
+    new ServiceTicket()
+    {
+        Id = 9,
+        CustomerId = 1,
+        Description = "The wheels are wobbling on my car",
+        Emergency = false,
+    },
+    new ServiceTicket()
+    {
+        Id = 10,
+        CustomerId = 3,
+        Description = "My brakes have stopped working!",
+        Emergency = true,
+    },
 };
 
 
@@ -327,9 +341,22 @@ app.MapGet("/employees/mosttickets", () => {
 
 app.MapGet("/servicetickets/completed", () =>
 {
+    EmployeAndCustomerRecord(serviceTickets);
+
     List<ServiceTicket> oldesFirst = serviceTickets.Where(st => st.DateCompleted != null).OrderBy(st => st.DateCompleted).ToList();
 
     return oldesFirst;
+});
+
+app.MapGet("/servicetickets/prioritized", () =>
+{
+    List<ServiceTicket> incompleteTicket = serviceTickets
+    .OrderByDescending(st => st.DateCompleted is null && st.Emergency)
+    .ThenByDescending(st => st.DateCompleted is null && st.Emergency == false)
+    .ThenBy(st => st.DateCompleted)
+    .ToList();
+
+    return incompleteTicket;
 });
 
 app.Run();
