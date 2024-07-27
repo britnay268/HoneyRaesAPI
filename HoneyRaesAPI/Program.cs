@@ -22,6 +22,12 @@ List<Customer> customers = new List<Customer>
         Name = "Daniel Vibe",
         Address = "2 Anarchy Street"
     },
+    new Customer()
+    {
+        Id = 7,
+        Name = "Chanel Clue",
+        Address = "89 sam Street"
+    },
 };
 List<Employee> employees = new List<Employee>
 {
@@ -37,25 +43,32 @@ List<Employee> employees = new List<Employee>
         Name = "Yona Vue",
         Speciality = "Hardware/Body Mechanic"
     },
+    new Employee()
+    {
+        Id = 4,
+        Name = "Jule Pen",
+        Speciality = "Jack of Trades"
+    },
 };
 List<ServiceTicket> serviceTickets = new List<ServiceTicket>
 {
     new ServiceTicket()
     {
         Id = 1,
-        CustomerId = 2,
+        CustomerId = 7,
         EmployeeId = 1,
         Description = "My screen in my car will not turn on when my car starts",
         Emergency = false,
-        DateCompleted = new DateTime(2024, 2, 4),
+        DateCompleted = new DateTime(2023, 2, 4),
     },
     new ServiceTicket()
     {
         Id = 2,
         CustomerId = 4,
+        EmployeeId = 4,
         Description = "My windsheild is shattered. The glass is all over in the car and is undrivable currently",
         Emergency = true,
-        DateCompleted = new DateTime(2024, 12, 20),
+        DateCompleted = new DateTime(2024, 1, 20),
     },
     new ServiceTicket()
     {
@@ -68,20 +81,59 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
     new ServiceTicket()
     {
         Id = 4,
-        CustomerId = 2,
+        CustomerId = 7,
         EmployeeId = 3,
         Description = "I got into a car crash and my car is dented all over - I need some body work done on it.",
         Emergency = false,
-        DateCompleted = new DateTime(2024, 1, 15),
+        DateCompleted = new DateTime(2023, 1, 15),
     },
     new ServiceTicket()
     {
         Id = 5,
-        CustomerId = 4,
-        EmployeeId = 1,
+        CustomerId = 6,
+        EmployeeId = 4,
         Description = "I think something is wrong with my spark plugs",
         Emergency = true,
+        DateCompleted = new DateTime(2023, 7, 13),
+    },
+    new ServiceTicket()
+    {
+        Id = 6,
+        CustomerId = 4,
+        Description = "There is a leak in the roof of my car",
+        Emergency = true,
+    },
+    new ServiceTicket()
+    {
+        Id = 7,
+        CustomerId = 2,
+        EmployeeId = 3,
+        Description = "My tesla stairing loses controller and swerves constantly when driving it",
+        Emergency = true,
         DateCompleted = new DateTime(2024, 7, 13),
+    },
+    new ServiceTicket()
+    {
+        Id = 8,
+        CustomerId = 6,
+        EmployeeId = 3,
+        Description = "Car break lights are not working and I don't want to get pulled over for it",
+        Emergency = true,
+        DateCompleted = new DateTime(2024, 6, 13),
+    },
+    new ServiceTicket()
+    {
+        Id = 9,
+        CustomerId = 1,
+        Description = "The wheels are wobbling on my car",
+        Emergency = false,
+    },
+    new ServiceTicket()
+    {
+        Id = 10,
+        CustomerId = 3,
+        Description = "My brakes have stopped working!",
+        Emergency = true,
     },
 };
 
@@ -105,32 +157,44 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // Get all service tickets endpoint
-app.MapGet("/servicetickets", () =>
+
+List<ServiceTicket> EmployeAndCustomerRecord (List<ServiceTicket> Tickets)
 {
-    foreach (ServiceTicket serviceTicket in serviceTickets)
+    foreach (ServiceTicket serviceTicket in Tickets)
     {
         serviceTicket.Employee = employees.FirstOrDefault(e => e.Id == serviceTicket.EmployeeId);
         serviceTicket.Customer = customers.FirstOrDefault(e => e.Id == serviceTicket.CustomerId);
     }
+
+    return Tickets;
+};
+
+app.MapGet("/servicetickets", () =>
+{
+    EmployeAndCustomerRecord(serviceTickets);
+
     return serviceTickets;
 });
 
-// Get service tickets by Id endpoint
+// This is done to get service tickets by Id endpoint
 app.MapGet("/servicetickets/{id}", (int id) =>
 {
     ServiceTicket? serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
     serviceTicket.Employee = employees.FirstOrDefault(e => e.Id == serviceTicket.EmployeeId);
     serviceTicket.Customer = customers.FirstOrDefault(e => e.Id == serviceTicket.CustomerId);
+
     return serviceTicket == null ? Results.NotFound() : Results.Ok(serviceTicket);
 });
 
-// Get all employees endpoint
+// This is done to get all employees endpoint
 app.MapGet("/employees", () =>
 {
+    employees.ForEach(e => e.ServiceTickets = serviceTickets.Where(st => st.EmployeeId == e.Id).ToList());
+
     return employees;
 });
 
-// Get all employees by id endpoint
+// This is done to get all employees by id endpoint
 app.MapGet("/employees/{id}", (int id) =>
 {
     // Gets employee by Id
@@ -142,11 +206,13 @@ app.MapGet("/employees/{id}", (int id) =>
 
 // Get all customers endpoint
 app.MapGet("/customers", () =>
-{
+{   
+    customers.ForEach(c => c.ServiceTickets = serviceTickets.Where(st => st.CustomerId == c.Id).ToList());
+
     return customers;
 });
 
-// Get all customers by Id endpoint
+// This is done to get all customers by Id endpoint
 app.MapGet("/customers/{id}", (int id) =>
 {
     Customer? customer = customers.FirstOrDefault(c => c.Id == id);
@@ -154,7 +220,7 @@ app.MapGet("/customers/{id}", (int id) =>
     return customer == null ? Results.NotFound() : Results.Ok(customer);
 });
 
-// Get all open service tickets
+// This done to get all open service tickets
 app.MapGet("/servicetickets/open", () =>
 {
     List<ServiceTicket> serviceTicket = serviceTickets
@@ -168,7 +234,7 @@ app.MapGet("/servicetickets/open", () =>
     return serviceTicket is null ? Results.NotFound() : Results.Ok(serviceTicket);
 });
 
-// Create a service ticket
+// This is done to create a service ticket
 app.MapPost("/servicetickets", (ServiceTicket serviceTicket) =>
 {
     // creates a new id (When we get to it later, our SQL database will do this for us like JSON Server did!)
@@ -177,6 +243,7 @@ app.MapPost("/servicetickets", (ServiceTicket serviceTicket) =>
     return serviceTicket;
 });
 
+// This is done to remove an existing service ticket
 app.MapDelete("servicetickets/{id}", (int id) =>
 {
     ServiceTicket? serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
@@ -184,6 +251,7 @@ app.MapDelete("servicetickets/{id}", (int id) =>
     serviceTickets.RemoveAt(index);
 });
 
+//This is done to add new data to an existing service ticket
 app.MapPut("/servicetickets/{id}", (int id, ServiceTicket serviceTicket) =>
 {
     ServiceTicket ticketToUpdate = serviceTickets.FirstOrDefault(st => st.Id == id);
@@ -197,11 +265,98 @@ app.MapPut("/servicetickets/{id}", (int id, ServiceTicket serviceTicket) =>
     return Results.Ok();
 });
 
-// This updates one entry or key in the servicticket object that is tores in ticketToComplete
+// This is done to update one entry or key in the servicticket object that is tores in ticketToComplete
 app.MapPost("/servicetickets/{id}/complete", (int id) =>
 {
     ServiceTicket ticketToComplete = serviceTickets.FirstOrDefault(st => st.Id == id);
     ticketToComplete.DateCompleted = DateTime.Today;
+});
+
+app.MapGet("/servicetickets/emergencies", () =>
+{
+    List<ServiceTicket> urgentTickets = serviceTickets.Where(st => st.DateCompleted is null && st.Emergency is true).ToList();
+
+    EmployeAndCustomerRecord(urgentTickets);
+
+    return urgentTickets;
+});
+
+app.MapGet("/servicetickets/unassigned", () =>
+{
+    List<ServiceTicket> unassignedTickets = serviceTickets.Where(st => st.EmployeeId is null && st.Employee is null).ToList();
+
+    EmployeAndCustomerRecord(unassignedTickets);
+
+    return unassignedTickets;
+});
+
+app.MapGet("/customers/inactive", () =>
+{
+    DateTime now = DateTime.Now;
+
+    DateTime oneYearAgo = now - TimeSpan.FromDays(365);
+
+    List<Customer> inactiveCustomers = customers.Where(c => serviceTickets.Any(st => st.CustomerId == c.Id && st.DateCompleted != null && st.DateCompleted < oneYearAgo)).ToList();
+
+    return inactiveCustomers;
+});
+
+app.MapGet("/employees/available", () =>
+{
+    // Used !serviceTickets.Any to check for the absence of a ticket based the condition in the Any method meaning if it matches the condition, it is now false, if it does, it true and will give me data that were true. serviceTickets.Any() would check for tickets that match the given condition whch would give all the employees with tickets that have DateCompleted or not.
+    List<Employee> availableEmployees = employees.Where(e => !serviceTickets.Any(st => st.EmployeeId == e.Id && st.DateCompleted is null)).ToList();
+
+    if (availableEmployees.Count == 0)
+        return Results.NotFound();
+
+    return Results.Ok(availableEmployees);
+});
+
+app.MapGet("/employees/{id}/customers", (int id) =>
+{
+    Employee employeeId = employees.FirstOrDefault(e => e.Id == id);
+
+    List<Customer> employeesCustomer = customers.Where(c => serviceTickets.Any(st => st.EmployeeId == employeeId.Id && st.CustomerId == c.Id)).ToList();
+
+    if (employeesCustomer.Count is 0)
+        return Results.NotFound();
+
+    return Results.Ok(employeesCustomer);
+});
+
+app.MapGet("/employees/mosttickets", () => {
+    var lastMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+
+    var employeewithMostTicketsCompleted = employees.Select(e => new
+    {
+        Name = e.Name,
+        TicketCount = serviceTickets
+        .Where(st => st.EmployeeId == e.Id && st.DateCompleted >= lastMonth.AddMonths(-1) && st.DateCompleted < lastMonth.AddMonths(0)).Count()
+    })
+    .OrderByDescending(e => e.TicketCount)
+    .FirstOrDefault();
+
+    return employeewithMostTicketsCompleted;
+});
+
+app.MapGet("/servicetickets/completed", () =>
+{
+    EmployeAndCustomerRecord(serviceTickets);
+
+    List<ServiceTicket> oldesFirst = serviceTickets.Where(st => st.DateCompleted != null).OrderBy(st => st.DateCompleted).ToList();
+
+    return oldesFirst;
+});
+
+app.MapGet("/servicetickets/prioritized", () =>
+{
+    List<ServiceTicket> incompleteTicket = serviceTickets
+    .OrderByDescending(st => st.DateCompleted is null && st.Emergency)
+    .ThenByDescending(st => st.DateCompleted is null && st.Emergency == false)
+    .ThenBy(st => st.DateCompleted)
+    .ToList();
+
+    return incompleteTicket;
 });
 
 app.Run();
