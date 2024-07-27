@@ -325,6 +325,13 @@ app.MapGet("/employees/mosttickets", () => {
     return employeewithMostTicketsCompleted;
 });
 
+app.MapGet("/servicetickets/completed", () =>
+{
+    List<ServiceTicket> oldesFirst = serviceTickets.Where(st => st.DateCompleted != null).OrderBy(st => st.DateCompleted).ToList();
+
+    return oldesFirst;
+});
+
 app.Run();
 
 
