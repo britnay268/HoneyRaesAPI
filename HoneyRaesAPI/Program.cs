@@ -68,7 +68,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
         EmployeeId = 4,
         Description = "My windsheild is shattered. The glass is all over in the car and is undrivable currently",
         Emergency = true,
-        DateCompleted = new DateTime(2024, 12, 20),
+        DateCompleted = new DateTime(2024, 1, 20),
     },
     new ServiceTicket()
     {
@@ -90,7 +90,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
     new ServiceTicket()
     {
         Id = 5,
-        CustomerId = 4,
+        CustomerId = 6,
         EmployeeId = 4,
         Description = "I think something is wrong with my spark plugs",
         Emergency = true,
@@ -106,17 +106,20 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
     new ServiceTicket()
     {
         Id = 7,
-        CustomerId = 7,
+        CustomerId = 2,
+        EmployeeId = 3,
         Description = "My tesla stairing loses controller and swerves constantly when driving it",
         Emergency = true,
+        DateCompleted = new DateTime(2024, 7, 13),
     },
     new ServiceTicket()
     {
         Id = 8,
         CustomerId = 6,
-        EmployeeId = 1,
+        EmployeeId = 3,
         Description = "Car break lights are not working and I don't want to get pulled over for it",
         Emergency = true,
+        DateCompleted = new DateTime(2024, 6, 13),
     },
 };
 
@@ -165,12 +168,15 @@ app.MapGet("/servicetickets/{id}", (int id) =>
     ServiceTicket? serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
     serviceTicket.Employee = employees.FirstOrDefault(e => e.Id == serviceTicket.EmployeeId);
     serviceTicket.Customer = customers.FirstOrDefault(e => e.Id == serviceTicket.CustomerId);
+
     return serviceTicket == null ? Results.NotFound() : Results.Ok(serviceTicket);
 });
 
 // This is done to get all employees endpoint
 app.MapGet("/employees", () =>
 {
+    employees.ForEach(e => e.ServiceTickets = serviceTickets.Where(st => st.EmployeeId == e.Id).ToList());
+
     return employees;
 });
 
@@ -186,11 +192,9 @@ app.MapGet("/employees/{id}", (int id) =>
 
 // Get all customers endpoint
 app.MapGet("/customers", () =>
-{
-    foreach (Customer customer in customers)
-    {
-        customer.ServiceTickets = serviceTickets.Where(st => st.CustomerId == customer.Id).ToList();
-    }
+{   
+    customers.ForEach(c => c.ServiceTickets = serviceTickets.Where(st => st.CustomerId == c.Id).ToList());
+
     return customers;
 });
 
@@ -278,15 +282,7 @@ app.MapGet("/customers/inactive", () =>
 
     DateTime oneYearAgo = now - TimeSpan.FromDays(365);
 
-    List<Customer> inactiveCustomers = new List<Customer>();
-
-    foreach (Customer customer in customers)
-    {
-        customer.ServiceTickets = serviceTickets.Where(st => st.CustomerId == customer.Id).ToList();
-    }
-
-    // I used Where to filter through all the service tickets in the customers collection once it finds any instance that the condition is met or is true to get the customers that had not have a ticket closed since a year ago
-    inactiveCustomers = customers.Where(c => c.ServiceTickets != null && c.ServiceTickets.Any(st => st.DateCompleted != null && st.DateCompleted < oneYearAgo)).ToList();
+    List<Customer> inactiveCustomers = customers.Where(c => serviceTickets.Any(st => st.CustomerId == c.Id && st.DateCompleted != null && st.DateCompleted < oneYearAgo)).ToList();
 
     return inactiveCustomers;
 });
@@ -295,20 +291,38 @@ app.MapGet("/employees/available", () =>
 {
     // Used !serviceTickets.Any to check for the absence of a ticket based the condition in the Any method meaning if it matches the condition, it is now false, if it does, it true and will give me data that were true. serviceTickets.Any() would check for tickets that match the given condition whch would give all the employees with tickets that have DateCompleted or not.
     List<Employee> availableEmployees = employees.Where(e => !serviceTickets.Any(st => st.EmployeeId == e.Id && st.DateCompleted is null)).ToList();
+
     if (availableEmployees.Count == 0)
         return Results.NotFound();
 
     return Results.Ok(availableEmployees);
 });
 
-app.MapGet("/employees/customers", () =>
+app.MapGet("/employees/{id}/customers", (int id) =>
 {
-    List<Customer> employeesCustomer = customers.Where(c => serviceTickets.Any(st => st.CustomerId == c.Id && st.EmployeeId is not null )).ToList();
+    Employee employeeId = employees.FirstOrDefault(e => e.Id == id);
+
+    List<Customer> employeesCustomer = customers.Where(c => serviceTickets.Any(st => st.EmployeeId == employeeId.Id && st.CustomerId == c.Id)).ToList();
 
     if (employeesCustomer.Count is 0)
         return Results.NotFound();
 
     return Results.Ok(employeesCustomer);
+});
+
+app.MapGet("/employees/mosttickets", () => {
+    var lastMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+
+    var employeewithMostTicketsCompleted = employees.Select(e => new
+    {
+        Name = e.Name,
+        TicketCount = serviceTickets
+        .Where(st => st.EmployeeId == e.Id && st.DateCompleted >= lastMonth.AddMonths(-1) && st.DateCompleted < lastMonth.AddMonths(0)).Count()
+    })
+    .OrderByDescending(e => e.TicketCount)
+    .FirstOrDefault();
+
+    return employeewithMostTicketsCompleted;
 });
 
 app.Run();
