@@ -22,6 +22,12 @@ List<Customer> customers = new List<Customer>
         Name = "Daniel Vibe",
         Address = "2 Anarchy Street"
     },
+    new Customer()
+    {
+        Id = 7,
+        Name = "Chanel Clue",
+        Address = "89 sam Street"
+    },
 };
 List<Employee> employees = new List<Employee>
 {
@@ -49,7 +55,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
     new ServiceTicket()
     {
         Id = 1,
-        CustomerId = 2,
+        CustomerId = 7,
         EmployeeId = 1,
         Description = "My screen in my car will not turn on when my car starts",
         Emergency = false,
@@ -75,7 +81,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
     new ServiceTicket()
     {
         Id = 4,
-        CustomerId = 2,
+        CustomerId = 7,
         EmployeeId = 3,
         Description = "I got into a car crash and my car is dented all over - I need some body work done on it.",
         Emergency = false,
@@ -100,7 +106,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
     new ServiceTicket()
     {
         Id = 7,
-        CustomerId = 6,
+        CustomerId = 7,
         Description = "My tesla stairing loses controller and swerves constantly when driving it",
         Emergency = true,
     },
@@ -293,6 +299,16 @@ app.MapGet("/employees/available", () =>
         return Results.NotFound();
 
     return Results.Ok(availableEmployees);
+});
+
+app.MapGet("/employees/customers", () =>
+{
+    List<Customer> employeesCustomer = customers.Where(c => serviceTickets.Any(st => st.CustomerId == c.Id && st.EmployeeId is not null )).ToList();
+
+    if (employeesCustomer.Count is 0)
+        return Results.NotFound();
+
+    return Results.Ok(employeesCustomer);
 });
 
 app.Run();
