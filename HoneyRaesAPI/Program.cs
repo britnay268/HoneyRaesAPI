@@ -37,6 +37,12 @@ List<Employee> employees = new List<Employee>
         Name = "Yona Vue",
         Speciality = "Hardware/Body Mechanic"
     },
+    new Employee()
+    {
+        Id = 4,
+        Name = "Jule Pen",
+        Speciality = "Jack of Trades"
+    },
 };
 List<ServiceTicket> serviceTickets = new List<ServiceTicket>
 {
@@ -53,6 +59,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
     {
         Id = 2,
         CustomerId = 4,
+        EmployeeId = 4,
         Description = "My windsheild is shattered. The glass is all over in the car and is undrivable currently",
         Emergency = true,
         DateCompleted = new DateTime(2024, 12, 20),
@@ -78,7 +85,7 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
     {
         Id = 5,
         CustomerId = 4,
-        EmployeeId = 1,
+        EmployeeId = 4,
         Description = "I think something is wrong with my spark plugs",
         Emergency = true,
         DateCompleted = new DateTime(2023, 7, 13),
@@ -272,10 +279,20 @@ app.MapGet("/customers/inactive", () =>
         customer.ServiceTickets = serviceTickets.Where(st => st.CustomerId == customer.Id).ToList();
     }
 
-    // I used Where to filter through all the service tickets in the customers collection once the condition is met or is true to get the customers that had not have a ticket closed since a year ago
+    // I used Where to filter through all the service tickets in the customers collection once it finds any instance that the condition is met or is true to get the customers that had not have a ticket closed since a year ago
     inactiveCustomers = customers.Where(c => c.ServiceTickets != null && c.ServiceTickets.Any(st => st.DateCompleted != null && st.DateCompleted < oneYearAgo)).ToList();
 
     return inactiveCustomers;
+});
+
+app.MapGet("/employees/available", () =>
+{
+    // Used !serviceTickets.Any to check for the absence of a ticket based the condition in the Any method meaning if it matches the condition, it is now false, if it does, it true and will give me data that were true. serviceTickets.Any() would check for tickets that match the given condition whch would give all the employees with tickets that have DateCompleted or not.
+    List<Employee> availableEmployees = employees.Where(e => !serviceTickets.Any(st => st.EmployeeId == e.Id && st.DateCompleted is null)).ToList();
+    if (availableEmployees.Count == 0)
+        return Results.NotFound();
+
+    return Results.Ok(availableEmployees);
 });
 
 app.Run();
