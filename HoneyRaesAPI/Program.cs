@@ -172,7 +172,7 @@ List<ServiceTicket> EmployeAndCustomerRecord (List<ServiceTicket> Tickets)
     return Tickets;
 };
 
-app.MapGet("/servicetickets", () =>
+app.MapGet("/api/servicetickets", () =>
 {
     EmployeAndCustomerRecord(serviceTickets);
 
@@ -180,7 +180,7 @@ app.MapGet("/servicetickets", () =>
 });
 
 // This is done to get service tickets by Id endpoint
-app.MapGet("/servicetickets/{id}", (int id) =>
+app.MapGet("/api/servicetickets/{id}", (int id) =>
 {
     ServiceTicket? serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
     serviceTicket.Employee = employees.FirstOrDefault(e => e.Id == serviceTicket.EmployeeId);
@@ -190,7 +190,7 @@ app.MapGet("/servicetickets/{id}", (int id) =>
 });
 
 // This is done to get all employees endpoint
-app.MapGet("/employees", () =>
+app.MapGet("/api/employees", () =>
 {
     employees.ForEach(e => e.ServiceTickets = serviceTickets.Where(st => st.EmployeeId == e.Id).ToList());
 
@@ -198,7 +198,7 @@ app.MapGet("/employees", () =>
 });
 
 // This is done to get all employees by id endpoint
-app.MapGet("/employees/{id}", (int id) =>
+app.MapGet("/api/employees/{id}", (int id) =>
 {
     // Gets employee by Id
     Employee? employee = employees.FirstOrDefault(e => e.Id == id);
@@ -208,7 +208,7 @@ app.MapGet("/employees/{id}", (int id) =>
 });
 
 // Get all customers endpoint
-app.MapGet("/customers", () =>
+app.MapGet("/api/customers", () =>
 {   
     customers.ForEach(c => c.ServiceTickets = serviceTickets.Where(st => st.CustomerId == c.Id).ToList());
 
@@ -216,7 +216,7 @@ app.MapGet("/customers", () =>
 });
 
 // This is done to get all customers by Id endpoint
-app.MapGet("/customers/{id}", (int id) =>
+app.MapGet("/api/customers/{id}", (int id) =>
 {
     Customer? customer = customers.FirstOrDefault(c => c.Id == id);
     customer.ServiceTickets = serviceTickets.Where(st => st.CustomerId == id).ToList();
@@ -238,7 +238,7 @@ app.MapGet("/servicetickets/open", () =>
 });
 
 // This is done to create a service ticket
-app.MapPost("/servicetickets", (ServiceTicket serviceTicket) =>
+app.MapPost("/api/servicetickets", (ServiceTicket serviceTicket) =>
 {
     // creates a new id (When we get to it later, our SQL database will do this for us like JSON Server did!)
     serviceTicket.Id = serviceTickets.Max(st => st.Id) + 1;
@@ -247,7 +247,7 @@ app.MapPost("/servicetickets", (ServiceTicket serviceTicket) =>
 });
 
 // This is done to remove an existing service ticket
-app.MapDelete("servicetickets/{id}", (int id) =>
+app.MapDelete("/api/servicetickets/{id}", (int id) =>
 {
     ServiceTicket? serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
     int index = serviceTickets.IndexOf(serviceTicket);
@@ -269,13 +269,13 @@ app.MapPut("/servicetickets/{id}", (int id, ServiceTicket serviceTicket) =>
 });
 
 // This is done to update one entry or key in the servicticket object that is tores in ticketToComplete
-app.MapPost("/servicetickets/{id}/complete", (int id) =>
+app.MapPost("/api/servicetickets/{id}/complete", (int id) =>
 {
     ServiceTicket ticketToComplete = serviceTickets.FirstOrDefault(st => st.Id == id);
     ticketToComplete.DateCompleted = DateTime.Today;
 });
 
-app.MapGet("/servicetickets/emergencies", () =>
+app.MapGet("/api/servicetickets/emergencies", () =>
 {
     List<ServiceTicket> urgentTickets = serviceTickets.Where(st => st.DateCompleted is null && st.Emergency is true).ToList();
 
@@ -284,7 +284,7 @@ app.MapGet("/servicetickets/emergencies", () =>
     return urgentTickets;
 });
 
-app.MapGet("/servicetickets/unassigned", () =>
+app.MapGet("/api/servicetickets/unassigned", () =>
 {
     List<ServiceTicket> unassignedTickets = serviceTickets.Where(st => st.EmployeeId is null && st.Employee is null).ToList();
 
@@ -293,7 +293,7 @@ app.MapGet("/servicetickets/unassigned", () =>
     return unassignedTickets;
 });
 
-app.MapGet("/customers/inactive", () =>
+app.MapGet("/api/customers/inactive", () =>
 {
     DateTime now = DateTime.Now;
 
@@ -304,7 +304,7 @@ app.MapGet("/customers/inactive", () =>
     return inactiveCustomers;
 });
 
-app.MapGet("/employees/available", () =>
+app.MapGet("/api/employees/available", () =>
 {
     // Used !serviceTickets.Any to check for the absence of a ticket based the condition in the Any method meaning if it matches the condition, it is now false, if it does, it true and will give me data that were true. serviceTickets.Any() would check for tickets that match the given condition whch would give all the employees with tickets that have DateCompleted or not.
     List<Employee> availableEmployees = employees.Where(e => !serviceTickets.Any(st => st.EmployeeId == e.Id && st.DateCompleted is null)).ToList();
@@ -315,7 +315,7 @@ app.MapGet("/employees/available", () =>
     return Results.Ok(availableEmployees);
 });
 
-app.MapGet("/employees/{id}/customers", (int id) =>
+app.MapGet("/api/employees/{id}/customers", (int id) =>
 {
     Employee employeeId = employees.FirstOrDefault(e => e.Id == id);
 
@@ -327,7 +327,7 @@ app.MapGet("/employees/{id}/customers", (int id) =>
     return Results.Ok(employeesCustomer);
 });
 
-app.MapGet("/employees/mosttickets", () => {
+app.MapGet("/api/employees/mosttickets", () => {
     var lastMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
 
     var employeewithMostTicketsCompleted = employees.Select(e => new
@@ -342,7 +342,7 @@ app.MapGet("/employees/mosttickets", () => {
     return employeewithMostTicketsCompleted;
 });
 
-app.MapGet("/servicetickets/completed", () =>
+app.MapGet("/api/servicetickets/completed", () =>
 {
     EmployeAndCustomerRecord(serviceTickets);
 
@@ -351,7 +351,7 @@ app.MapGet("/servicetickets/completed", () =>
     return oldesFirst;
 });
 
-app.MapGet("/servicetickets/prioritized", () =>
+app.MapGet("/api/servicetickets/prioritized", () =>
 {
     List<ServiceTicket> incompleteTicket = serviceTickets
     .OrderByDescending(st => st.DateCompleted is null && st.Emergency)
