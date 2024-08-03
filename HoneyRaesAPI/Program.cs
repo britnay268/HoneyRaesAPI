@@ -125,14 +125,14 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
     new ServiceTicket()
     {
         Id = 9,
-        CustomerId = 1,
+        CustomerId = 4,
         Description = "The wheels are wobbling on my car",
         Emergency = false,
     },
     new ServiceTicket()
     {
         Id = 10,
-        CustomerId = 3,
+        CustomerId = 6,
         Description = "My brakes have stopped working!",
         Emergency = true,
     },
@@ -255,7 +255,7 @@ app.MapDelete("/api/servicetickets/{id}", (int id) =>
 });
 
 //This is done to add new data to an existing service ticket
-app.MapPut("/servicetickets/{id}", (int id, ServiceTicket serviceTicket) =>
+app.MapPut("/api/servicetickets/{id}", (int id, ServiceTicket serviceTicket) =>
 {
     ServiceTicket ticketToUpdate = serviceTickets.FirstOrDefault(st => st.Id == id);
     int ticketIndex = serviceTickets.IndexOf(ticketToUpdate);
